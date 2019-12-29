@@ -33,7 +33,7 @@ export const resolvers = {
     Query: {
         company: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
-            console.log("-------------->",db.company)
+            console.log("-------------->",tk_status)
             if(tk_status){
                 return db.company.findByPk(args.id)
             } else {
