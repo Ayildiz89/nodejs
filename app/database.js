@@ -2,9 +2,9 @@ const Sequelize = require('sequelize')
 
 var db = {}
 
-const sequelize = new Sequelize('flow', 'root', '', {
-    host: 'localhost',
-    port: '8889',
+const sequelize = new Sequelize('flow', 'root', 'Aa20012001', {
+    host: '212.227.192.142',
+    port: '3306',
     dialect: 'mysql',
     define: {
         freezeTableName: true,
