@@ -8,7 +8,7 @@ import * as token_control from '../modules/token_control'
 
 export const typeDefs = gql`
     extend type Query {
-        users(token:String!,company_id:ID!,role_id:ID): [User]
+        users(token:String!,company_id:ID!, role_id:ID, search:String): [User]
         user(token:String!,id: ID!): User
     }
 
@@ -36,6 +36,7 @@ export const typeDefs = gql`
         lang: String
     }
 `
+const Op = db.Sequelize.Op;
 
 export const resolvers = {
     Query: {
@@ -51,11 +52,36 @@ export const resolvers = {
                         role_id:args.role_id
                     }
                 }
+
+                
+
                 const ids = (await db.user_company.findAll(where)).map(uc=>uc.user_id)
-                const Op = db.Sequelize.Op;
-                return db.users.findAll({where:{
-                    id:{[Op.in] : ids}
-                }})
+                console.log(ids)
+                const where2 = {
+                    where:{id:{[Op.in] : ids}}
+                }
+
+                if(args.search){
+                    where2.where={
+                        ...where2.where,
+                        [Op.or]: [
+                            {
+                                first_name: {
+                                    [Op.like]: `%${args.search}%`
+                                }
+                            },{
+                                last_name: {
+                                    [Op.like]: `%${args.search}%`
+                                }
+                            }
+                        ]
+                            
+                    }
+                }
+
+                
+                //console.log(where2)
+                return db.users.findAll({...where2})
             } else {
                 return {
                     data:{trans_tag:{

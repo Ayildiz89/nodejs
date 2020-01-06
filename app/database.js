@@ -38,6 +38,7 @@ let models = [
     require('./models/reports'),
     require('./models/reports_of_event'),
     require('./models/user_other_data'),
+    require('./models/company_templates'),
 ]
 
 // Initialize models

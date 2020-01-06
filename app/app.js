@@ -1,5 +1,6 @@
 import '@babel/polyfill'
-import express from 'express'
+import express from 'express';
+const GraphQLJSON = require('graphql-type-json');
 const bodyParser = require('body-parser')
 const { ApolloServer } = require('apollo-server-express')
 const cors = require('cors')
@@ -7,6 +8,12 @@ const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
+
+
+
+const resolveFunctions = {
+    JSON: GraphQLJSON
+  };
 
 const server = new ApolloServer({
     modules: [
@@ -20,7 +27,9 @@ const server = new ApolloServer({
         require('./GraphQL/courses'),
         require('./GraphQL/events'),
         require('./GraphQL/lesson'),
+        require('./GraphQL/company_templates'),
     ],
+    resolvers: resolveFunctions
 })
 
 server.applyMiddleware({ app })
