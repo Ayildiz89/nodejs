@@ -9,7 +9,7 @@ import * as token_control from '../modules/token_control'
 export const typeDefs = gql`
     extend type Query {
         users(token:String!,company_id:ID!, role_id:ID, search:String): [User]
-        user(token:String!,id: ID!): User
+        user(token:String!,id: ID!, company_id: ID): User
     }
 
     scalar Date
@@ -34,7 +34,13 @@ export const typeDefs = gql`
         houseno: String
         salerate: String
         lang: String
+        companies: [Company]
+        user_other_data(company_id: ID!): [UserOtherData]
+        events: [Event]
+        reports(company_id: ID!): [Report]
+        courses: [Course]
     }
+
 `
 const Op = db.Sequelize.Op;
 
@@ -100,8 +106,79 @@ export const resolvers = {
         }
     },
     User: {
-        company: async (obj, args, context, info) => {
-
+        companies: async (obj, args, context, info) => {
+            
+            const company_ids = await db.user_company.findAll({where:{user_id:obj.dataValues.id}})
+            const ids = company_ids.map(c_ids=>c_ids.dataValues.id)
+            
+            return await db.company.findAll({
+                where:{
+                    id:{[Op.in]:ids}
+                }
+            })
+        },
+        user_other_data: async (obj, args, context, info) => {
+            return await db.user_other_data.findAll({
+                where:{
+                    company_id:args.company_id,
+                    user_id:obj.id
+                }
+            })
+            
+        },
+        events: async (obj, args, context, info) => {
+            const events_id = await db.event_users.findAll({
+                where:{
+                    user_id:obj.id
+                }
+            })
+            const ids = events_id.map(e=>e.event_id)
+            return await db.events.findAll({
+                where:{
+                    id:{
+                        [Op.in]:ids
+                    }
+                }
+            })
+        },
+        reports: async (obj, args, context, info) => {
+            return await db.reports.findAll({
+                where:{
+                    company_id:args.company_id,
+                    student_id:obj.id
+                }
+            })
+        },
+        courses: async (obj, args, context, info) => {
+            const events_user = await db.event_users.findAll({
+                where:{
+                    user_id:obj.id
+                }
+            })
+            const events_id = events_user.map(e=>e.event_id)
+            const events = await db.events.findAll({
+                where:{
+                    id:{
+                        [Op.in]:events_id
+                    }
+                }
+            })
+            
+            const classes_id = events.map(e=>e.class_id)
+            
+            let courses_id = []
+            classes_id.map(e=>{
+                if(courses_id.findIndex(c=>c===e)==-1){
+                    courses_id.push(e)
+                }
+            })
+            return await db.classes.findAll({
+                where:{
+                    id:{
+                       [Op.in]:courses_id 
+                    }
+                }
+            })
         }
     }
 }

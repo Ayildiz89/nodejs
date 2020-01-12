@@ -22,12 +22,17 @@ const server = new ApolloServer({
         require('./GraphQL/priorities'),
         require('./GraphQL/users'),
         require('./GraphQL/category'),
+        require('./GraphQL/classroom'),
         require('./GraphQL/check_list'),
         require('./GraphQL/company'),
         require('./GraphQL/courses'),
         require('./GraphQL/events'),
         require('./GraphQL/lesson'),
         require('./GraphQL/company_templates'),
+        require('./GraphQL/user_other_data'),
+        require('./GraphQL/form_data'),
+        require('./GraphQL/reports'),
+
     ],
     resolvers: resolveFunctions
 })

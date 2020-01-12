@@ -1,5 +1,5 @@
 module.exports = function(sequelize, DataTypes) {
-	return sequelize.define('event_user', {
+	return sequelize.define('event_users', {
 		id: {
 			type: DataTypes.INTEGER(10).UNSIGNED,
 			allowNull: false,
@@ -10,12 +10,12 @@ module.exports = function(sequelize, DataTypes) {
 			type: DataTypes.INTEGER(10).UNSIGNED,
 			allowNull: false,
 		},
-		events_id: {
+		event_id: {
 			type: DataTypes.INTEGER(10).UNSIGNED,
 			allowNull: false,
 		},
 	}, {
-		tableName: 'event_user',
+		tableName: 'event_users',
 		timestamps: false
 	});
 };
