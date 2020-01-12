@@ -35,6 +35,7 @@ export const typeDefs = gql`
         salerate: String
         lang: String
         companies: [Company]
+        roles(company_id: ID!):[Int]
         user_other_data(company_id: ID!): [UserOtherData]
         events: [Event]
         reports(company_id: ID!): [Report]
@@ -107,7 +108,6 @@ export const resolvers = {
     },
     User: {
         companies: async (obj, args, context, info) => {
-            
             const company_ids = await db.user_company.findAll({where:{user_id:obj.dataValues.id}})
             const ids = company_ids.map(c_ids=>c_ids.dataValues.id)
             
@@ -116,6 +116,14 @@ export const resolvers = {
                     id:{[Op.in]:ids}
                 }
             })
+        },
+        roles: async (obj, args, context, info) => {
+            const company_ids = await db.user_company.findAll({
+                where:{
+                    user_id:obj.id,
+                    company_id:args.company_id
+                }})
+            return company_ids.map(c_ids=>c_ids.dataValues.role_id)
         },
         user_other_data: async (obj, args, context, info) => {
             return await db.user_other_data.findAll({
@@ -179,6 +187,6 @@ export const resolvers = {
                     }
                 }
             })
-        }
+        },
     }
 }
