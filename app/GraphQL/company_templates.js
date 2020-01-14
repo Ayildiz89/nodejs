@@ -8,8 +8,13 @@ export const typeDefs = gql`
     
     extend type Query {
         company_templates(token:String!,company_id:ID!): [CompanyTemplate]
-        company_template(token:String!,id:ID!): CompanyTemplate
+        company_template(token:String!,id:ID!, temp:String): CompanyTemplate
     }
+
+    #extend type Mutation {
+    #    putTemplate(token:String!,id:ID!):CompanyTemplate
+    #    postTemplate(token:String!,id:company_id:ID!):CompanyTemplate
+    #}
 
     type CompanyTemplate {
         id: ID!
@@ -37,5 +42,16 @@ export const resolvers = {
 
             }
         },
-    }
+    },
+    /*Mutation: {
+        putTemplate: async (obj, args, context, info) => {
+            const tk_status = await token_control(args.token)
+            if(tk_status){
+                
+            } else {
+
+            }
+            
+        }
+    }*/
 }
