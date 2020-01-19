@@ -25,7 +25,7 @@ export const resolvers = {
         user_other_data: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
-                return db.user_other_data.findAll({
+                return await db.user_other_data.findAll({
                     where:{
                         company_id:args.company_id,
                         user_id:args.user_id

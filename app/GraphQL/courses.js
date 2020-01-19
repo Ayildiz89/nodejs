@@ -2,6 +2,8 @@ import { gql } from 'apollo-server-express'
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
 
+const Op = db.Sequelize.Op;
+
 export const typeDefs = gql`
     extend type Query {
         courses(token:String!,company_id: ID!): [Course]
@@ -23,7 +25,7 @@ export const typeDefs = gql`
         teapri: String
         created_at: Date
         updated_at: Date
-        events: [Event]
+        events(user_id: ID): [Event]
         teacher: User
         lesson: Lesson
         classroom: Classroom
@@ -53,11 +55,20 @@ export const resolvers = {
     },
     Course: {
         events: async (obj, args, context, info) => {
-            return await db.events.findAll({
-                where:{
-                    class_id:obj.id
+            let where = {
+                class_id:obj.id
+            }
+            if(args.user_id){
+                const user_events = await db.event_users.findAll({where:{user_id:args.user_id}})
+                const ids = user_events.map(u=>u.event_id)
+                where = {
+                    ...where,
+                    id:{
+                        [Op.in]:ids
+                    }
                 }
-            })
+            }
+            return await db.events.findAll({where})
         },
         events_count: async (obj, args, context, info) => {
             return await db.events.count({

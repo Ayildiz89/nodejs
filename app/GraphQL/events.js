@@ -7,7 +7,7 @@ const Op = db.Sequelize.Op;
 
 export const typeDefs = gql`
     extend type Query {
-        events(token:String! class_id: ID, company_id: ID): [Event]
+        events(token:String! class_id: ID, company_id: ID!, user_id: ID, start: Date, end:Date): [Event]
         event(token:String!,id: ID!): Event
     }
 
@@ -47,11 +47,34 @@ export const resolvers = {
         events: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
-                return await db.events.findAll({
-                    where:{                        
-                        company_id:args.company_id
+                let where = {
+                    company_id:args.company_id
+                }
+                if(args.class_id){
+                    where = {
+                        ...where,
+                        class_id:args.class_id
                     }
-                })
+                }
+                if(args.user_id){
+                    const user_events = await db.event_users.findAll({where:{user_id:args.user_id}})
+                    const ids = user_events.map(u=>u.event_id)
+                    where = {
+                        ...where,
+                        id:{
+                            [Op.in]:ids
+                        }
+                    }
+                }
+                if(args.start&&args.end){
+                    where = {
+                        ...where,
+                        start:{
+                            [Op.between]:[args.start, args.end]
+                        }
+                    }
+                }
+                return await db.events.findAll({where})
             } else {
 
             }
@@ -62,8 +85,8 @@ export const resolvers = {
             return await db.classes.findByPk(obj.class_id)
         },
         students: async (obj, args, context, info) => {
-            const users_id = await db.event_users.findAll({where:{id:obj.id}})
-            const ids = users_id.map(u=>u.dataValues.user_id)
+            const users_id = await db.event_users.findAll({where:{event_id:obj.id}})
+            const ids = users_id.map(u=>u.user_id)
             
             return db.users.findAll({
                 where:{
