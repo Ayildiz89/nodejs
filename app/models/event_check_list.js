@@ -14,6 +14,10 @@ module.exports = function(sequelize, DataTypes) {
 			type: DataTypes.INTEGER(10).UNSIGNED,
 			allowNull: false,
 		},
+		class_id: {
+			type: DataTypes.INTEGER(10).UNSIGNED,
+			allowNull: false,
+		},
 	}, {
 		tableName: 'event_check_list',
 		timestamps: false

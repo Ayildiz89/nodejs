@@ -15,6 +15,8 @@ export const typeDefs = gql`
         type_id: ID
         allclass:Boolean
         isrequired: Boolean
+        existevent:Boolean
+        existcourse:Boolean
     }
 `
 
@@ -31,10 +33,33 @@ export const resolvers = {
         check: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
-                return db.check_list.findByPk(args.id)
+                return await db.check_list.findByPk(args.id)
             } else {
 
             }
+        }
+    },
+    CheckList: {
+        existevent: async (obj, args, context, info) => {
+            const events_check_id = await db.event_check_list.findAll({
+                where:{
+                    check_list_id:obj.id
+                }
+            })
+
+            const events_ids = events_check_id.map(ec=>ec.events_id)
+            const status = events_ids.filter(i=>i!==null)
+            return status.length?true:false
+        },
+        existcourse:  async (obj, args, context, info) => {
+            const events_check_id = await db.event_check_list.findAll({
+                where:{
+                    check_list_id:obj.id
+                }
+            })
+            const class_ids = events_check_id.map(ec=>ec.class_id)
+            const status = class_ids.filter(i=>i!==null)
+            return status.length?true:false
         }
     }
 }
