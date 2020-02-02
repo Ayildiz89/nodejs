@@ -3,6 +3,8 @@ import { gql } from 'apollo-server-express'
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
 
+const Op = db.Sequelize.Op;
+
 export const typeDefs = gql`
     extend type Query {
         check_list(token:String!,company_id:ID!): [CheckList]
@@ -17,6 +19,9 @@ export const typeDefs = gql`
         isrequired: Boolean
         existevent:Boolean
         existcourse:Boolean
+        events:[Event]
+        events_id:[Int]
+        courses_id:[Int]
     }
 `
 
@@ -60,6 +65,37 @@ export const resolvers = {
             const class_ids = events_check_id.map(ec=>ec.class_id)
             const status = class_ids.filter(i=>i!==null)
             return status.length?true:false
+        },
+        events: async (obj, args, context, info) => {
+            const events_check_id = await db.event_check_list.findAll({
+                where:{
+                    check_list_id:obj.id
+                }
+            })
+            const events_ids = events_check_id.map(ec=>ec.events_id)
+            return await db.events.findAll({
+                where:{
+                    id:{
+                        [Op.in]:events_ids
+                    }
+                }
+            })
+        },
+        events_id: async (obj, args, context, info) => {
+            const events_check_id = await db.event_check_list.findAll({
+                where:{
+                    check_list_id:obj.id
+                }
+            })
+            return events_check_id.map(ec=>ec.events_id)
+        },
+        courses_id: async (obj, args, context, info) => {
+            const events_check_id = await db.event_check_list.findAll({
+                where:{
+                    check_list_id:obj.id
+                }
+            })
+            return events_check_id.map(ec=>ec.class_id)
         }
     }
 }
