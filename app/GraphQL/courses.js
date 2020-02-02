@@ -6,7 +6,7 @@ const Op = db.Sequelize.Op;
 
 export const typeDefs = gql`
     extend type Query {
-        courses(token:String!,company_id: ID!): [Course]
+        courses(token:String!,company_id: ID!, witharchived:Boolean): [Course]
         course(token:String!,id: ID!): Course
     }
 
@@ -39,7 +39,16 @@ export const resolvers = {
         courses: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
-                return db.classes.findAll({where:{company_id:args.company_id}})
+                let where = {
+                    company_id:args.company_id
+                }
+                if(!args.witharchived||args.witharchived===undefined){
+                    where = {
+                        ...where,
+                        is_archived:false
+                    }
+                }
+                return db.classes.findAll({where})
             } else {
 
             }
