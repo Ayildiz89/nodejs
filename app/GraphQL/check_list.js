@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express'
+import { gql, ApolloError } from 'apollo-server-express'
 //import { GraphQLScalarType } from 'graphql';
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
@@ -9,6 +9,12 @@ export const typeDefs = gql`
     extend type Query {
         check_list(token:String!,company_id:ID!): [CheckList]
         check(token:String!,id: ID!): CheckList
+    }
+
+    extend type Mutation {
+        createCheck(company_id:ID!, name:String!, type_id:ID!,  allclass:Boolean, isrequired:Boolean): CheckList,
+        
+        updateCheck(id:ID!, company_id:ID, name:String, type_id:ID, allclass:Boolean, isrequired:Boolean): CheckList
     }
 
     type CheckList {
@@ -32,7 +38,8 @@ export const resolvers = {
             if(tk_status){
                 return db.check_list.findAll({where:{company_id:args.company_id}})
             } else {
-
+                throw new ApolloError("token is required",1000)
+                   
             }
         },
         check: async (obj, args, context, info) => {
@@ -40,9 +47,51 @@ export const resolvers = {
             if(tk_status){
                 return await db.check_list.findByPk(args.id)
             } else {
-
+                throw new ApolloError("token is required",1000)
             }
         }
+    },
+    Mutation: {
+        createCheck: async (obj, {company_id, name, type_id, allclass, isrequired}, context, info) => {
+            const aa = await db.check_list.create({
+                company_id, 
+                name, 
+                type_id, 
+                allclass, 
+                isrequired,
+                created_at: new Date(),
+                updated_at: new Date()
+            }).then(result => {
+                return result;
+              })
+              .catch(err => {
+                console.log(err);
+              });
+            return aa
+        },
+        updateCheck: async (obj, args, context, info) => {
+            let data = {} 
+            Object.keys(args).map(o=>{
+                if(args[o]&&o!=="id"){
+                    data = {
+                        ...data,
+                        [o]: args[o]
+                    }
+                }
+            })
+            await db.check_list.update(data,
+                {
+                    where: {
+                        id: args.id
+                    }
+                })
+              .catch(err => {
+                console.log(err);
+              });
+
+            return await db.check_list.findByPk(args.id)
+            
+        },
     },
     CheckList: {
         existevent: async (obj, args, context, info) => {

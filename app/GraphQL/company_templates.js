@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express'
+import { gql, ApolloError } from 'apollo-server-express'
 //import { GraphQLScalarType } from 'graphql';
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
@@ -31,7 +31,7 @@ export const resolvers = {
             if(tk_status){
                 return db.company_templates.findAll({where:{company_id:args.company_id}})
             } else {
-
+                throw new ApolloError("token is required",1000)
             }
         },
         company_template: async (obj, args, context, info) => {
@@ -39,7 +39,7 @@ export const resolvers = {
             if(tk_status){
                 return db.company_templates.findByPk(args.id)
             } else {
-
+                throw new ApolloError("token is required",1000)
             }
         },
     },

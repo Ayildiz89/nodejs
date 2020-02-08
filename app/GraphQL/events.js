@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express'
+import { gql, ApolloError } from 'apollo-server-express'
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
 
@@ -41,7 +41,7 @@ export const resolvers = {
             if(tk_status){
                 return await db.events.findByPk(args.id)
             } else {
-
+                throw new ApolloError("token is required",1000)
             }
         },
         events: async (obj, args, context, info) => {
@@ -76,7 +76,7 @@ export const resolvers = {
                 }
                 return await db.events.findAll({where})
             } else {
-
+                throw new ApolloError("token is required",1000)
             }
         }
     },

@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express'
+import { gql, ApolloError } from 'apollo-server-express'
 //import { GraphQLScalarType } from 'graphql';
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
@@ -89,19 +89,17 @@ export const resolvers = {
                 //console.log(where2)
                 return db.users.findAll({...where2})
             } else {
-                return {
-                    data:{trans_tag:{
-                        type:0,
-                        tag:"global"
-                    }}
-                }
+                throw new ApolloError("token is required",1000)
                 //throw 'You must be logged in';
             }
         },
         user: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
+            console.log(tk_status)
             if(tk_status){
                 return db.users.findByPk(args.id)
+            } else {
+                throw new ApolloError("token is required",1000)
             }
         }
     },

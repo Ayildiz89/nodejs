@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express'
+import { gql, ApolloError } from 'apollo-server-express'
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
 
@@ -29,7 +29,7 @@ export const resolvers = {
                 }})
                 
             } else {
-
+                throw new ApolloError("token is required",1000)
             }
         },
         lesson: async (obj, args, context, info) => {
