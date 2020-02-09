@@ -12,9 +12,9 @@ export const typeDefs = gql`
     }
 
     extend type Mutation {
-        createCheck(company_id:ID!, name:String!, type_id:ID!,  allclass:Boolean, isrequired:Boolean): CheckList,
+        createCheck(token:String! company_id:ID!, name:String!, type_id:ID!,  allclass:Boolean, isrequired:Boolean, events:[ID], courses:[ID]): CheckList,
         
-        updateCheck(id:ID!, company_id:ID, name:String, type_id:ID, allclass:Boolean, isrequired:Boolean): CheckList
+        updateCheck(token:String! id:ID!, company_id:ID, name:String, type_id:ID, allclass:Boolean, isrequired:Boolean): CheckList
     }
 
     type CheckList {
@@ -26,8 +26,8 @@ export const typeDefs = gql`
         existevent:Boolean
         existcourse:Boolean
         events:[Event]
-        events_id:[Int]
-        courses_id:[Int]
+        events_id:[Int!]
+        courses_id:[Int!]
     }
 `
 
@@ -52,44 +52,56 @@ export const resolvers = {
         }
     },
     Mutation: {
-        createCheck: async (obj, {company_id, name, type_id, allclass, isrequired}, context, info) => {
-            const aa = await db.check_list.create({
-                company_id, 
-                name, 
-                type_id, 
-                allclass, 
-                isrequired,
-                created_at: new Date(),
-                updated_at: new Date()
-            }).then(result => {
-                return result;
-              })
-              .catch(err => {
-                console.log(err);
-              });
-            return aa
+        createCheck: async (obj, {token, company_id, name, type_id, allclass, isrequired}, context, info) => {
+            const tk_status = await token_control(token)
+            if(tk_status){
+                let opt = {
+                    company_id,
+                    name, 
+                    type_id, 
+                    allclass,
+                    isrequired,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                }
+                const aa = await db.check_list.create(opt)
+                .then(result => {
+                    return result;
+                  })
+                  .catch(err => {
+                    console.log(err);
+                  });
+                return aa
+            } else {
+                throw new ApolloError("token is required",1000)
+            }
         },
         updateCheck: async (obj, args, context, info) => {
-            let data = {} 
-            Object.keys(args).map(o=>{
-                if(args[o]&&o!=="id"){
-                    data = {
-                        ...data,
-                        [o]: args[o]
-                    }
-                }
-            })
-            await db.check_list.update(data,
-                {
-                    where: {
-                        id: args.id
+            const tk_status = await token_control(args.token)
+            if(tk_status){
+                let data = {} 
+                Object.keys(args).map(o=>{
+                    if(args[o]&&o!=="id"){
+                        data = {
+                            ...data,
+                            [o]: args[o]
+                        }
                     }
                 })
-              .catch(err => {
-                console.log(err);
-              });
-
-            return await db.check_list.findByPk(args.id)
+                await db.check_list.update(data,
+                    {
+                        where: {
+                            id: args.id
+                        }
+                    })
+                  .catch(err => {
+                    console.log(err);
+                  });
+    
+                return await db.check_list.findByPk(args.id)  
+            } else {
+                throw new ApolloError("token is required",1000)
+            }
             
         },
     },
