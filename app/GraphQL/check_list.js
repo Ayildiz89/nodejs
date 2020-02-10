@@ -14,7 +14,7 @@ export const typeDefs = gql`
     extend type Mutation {
         createCheck(token:String! company_id:ID!, name:String!, type_id:ID!,  allclass:Boolean, isrequired:Boolean, events:[ID], courses:[ID]): CheckList,
         
-        updateCheck(token:String! id:ID!, company_id:ID, name:String, type_id:ID, allclass:Boolean, isrequired:Boolean): CheckList
+        updateCheck(token:String! id:ID!, company_id:ID, name:String, type_id:ID, allclass:Boolean, isrequired:Boolean, events:[ID], courses:[ID]): CheckList
     }
 
     type CheckList {
@@ -26,8 +26,8 @@ export const typeDefs = gql`
         existevent:Boolean
         existcourse:Boolean
         events:[Event]
-        events_id:[Int!]
-        courses_id:[Int!]
+        events_id:[ID!]
+        courses_id:[ID!]
     }
 `
 
@@ -52,7 +52,7 @@ export const resolvers = {
         }
     },
     Mutation: {
-        createCheck: async (obj, {token, company_id, name, type_id, allclass, isrequired}, context, info) => {
+        createCheck: async (obj, {token, company_id, name, type_id, allclass, isrequired, events=[], courses=[]}, context, info) => {
             const tk_status = await token_control(token)
             if(tk_status){
                 let opt = {
@@ -64,14 +64,45 @@ export const resolvers = {
                     created_at: new Date(),
                     updated_at: new Date()
                 }
-                const aa = await db.check_list.create(opt)
+                const onlycheck = await db.check_list.create(opt)
                 .then(result => {
-                    return result;
+                    return result
                   })
                   .catch(err => {
                     console.log(err);
                   });
-                return aa
+                let check;
+                if(events.length || courses.length)
+                {
+                    let data = [];
+                    events.map(e=>{
+                        data.push({
+                            check_list_id: onlycheck.id,
+                            events_id:e,
+                            class_id:null
+                        })
+                    })
+                    courses.map(c=>{
+                        data.push({
+                            check_list_id:onlycheck.id,
+                            events_id:null,
+                            class_id:c
+                        })
+                    })
+                    
+                    check = await db.event_check_list.bulkCreate(data)
+                    .then(result=>{
+                        return {
+                            ...onlycheck.dataValues,
+                            courses,
+                            events
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                }
+                return check
             } else {
                 throw new ApolloError("token is required",1000)
             }
@@ -81,7 +112,7 @@ export const resolvers = {
             if(tk_status){
                 let data = {} 
                 Object.keys(args).map(o=>{
-                    if(args[o]&&o!=="id"){
+                    if(args[o]&&o!=="id"||args[o]&&o!=="events"||args[o]&&o!=="courses"){
                         data = {
                             ...data,
                             [o]: args[o]
@@ -97,7 +128,19 @@ export const resolvers = {
                   .catch(err => {
                     console.log(err);
                   });
-    
+                const event_check_list = await db.event_check_list.findAll({
+                    where:{
+                        check_list_id:args.id
+                    }
+                })
+                const ids = event_check_list.map(ec=>ec.id)
+                db.event_check_list.destroy({
+                    where: {
+                        id: {
+                            [Op.in]:ids
+                        }
+                    }
+                })
                 return await db.check_list.findByPk(args.id)  
             } else {
                 throw new ApolloError("token is required",1000)
