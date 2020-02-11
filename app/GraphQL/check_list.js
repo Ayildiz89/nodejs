@@ -26,8 +26,8 @@ export const typeDefs = gql`
         existevent:Boolean
         existcourse:Boolean
         events:[Event]
-        events_id:[ID!]
-        courses_id:[ID!]
+        events_id:[ID]
+        courses_id:[ID]
     }
 `
 
@@ -111,14 +111,16 @@ export const resolvers = {
             const tk_status = await token_control(args.token)
             if(tk_status){
                 let data = {} 
-                Object.keys(args).map(o=>{
-                    if(args[o]&&o!=="id"||args[o]&&o!=="events"||args[o]&&o!=="courses"){
+                const elements = Object.keys(args).filter(o=>args[o]&&o!=="id"||o!=="events"||o!=="courses")
+                elements.map(o=>{
+                    //if(){
                         data = {
                             ...data,
                             [o]: args[o]
                         }
-                    }
+                    //}
                 })
+                console.log(data,args)
                 await db.check_list.update(data,
                     {
                         where: {
@@ -140,8 +142,36 @@ export const resolvers = {
                             [Op.in]:ids
                         }
                     }
+                }).then(result=>{
+                    const events = args.events
+                    const courses = args.courses
+                    if(events.length || courses.length)
+                    {
+                        let data = [];
+                        events.map(e=>{
+                            data.push({
+                                check_list_id: args.id,
+                                events_id:e,
+                                class_id:null
+                            })
+                        })
+                        courses.map(c=>{
+                            data.push({
+                                check_list_id:args.id,
+                                events_id:null,
+                                class_id:c
+                            })
+                        })
+                        db.event_check_list.bulkCreate(data)
+                        .then(result=>{
+                            
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        });
+                    }
                 })
-                return await db.check_list.findByPk(args.id)  
+                return await db.check_list.findByPk(args.id)
             } else {
                 throw new ApolloError("token is required",1000)
             }
@@ -191,7 +221,8 @@ export const resolvers = {
                     check_list_id:obj.id
                 }
             })
-            return events_check_id.map(ec=>ec.events_id)
+            const filtered = events_check_id.filter(c=>c.dataValues.events_id!==null)
+            return filtered.map(e=>e.dataValues.events_id)
         },
         courses_id: async (obj, args, context, info) => {
             const events_check_id = await db.event_check_list.findAll({
@@ -199,7 +230,8 @@ export const resolvers = {
                     check_list_id:obj.id
                 }
             })
-            return events_check_id.map(ec=>ec.class_id)
+            const filtered = events_check_id.filter(c=>c.dataValues.class_id!==null)
+            return filtered.map(e=>e.dataValues.class_id)
         }
     }
 }
