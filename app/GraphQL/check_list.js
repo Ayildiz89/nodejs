@@ -14,7 +14,9 @@ export const typeDefs = gql`
     extend type Mutation {
         createCheck(token:String! company_id:ID!, name:String!, type_id:ID!,  allclass:Boolean, isrequired:Boolean, events:[ID], courses:[ID]): CheckList,
         
-        updateCheck(token:String! id:ID!, company_id:ID, name:String, type_id:ID, allclass:Boolean, isrequired:Boolean, events:[ID], courses:[ID]): CheckList
+        updateCheck(token:String! id:ID!, company_id:ID, name:String, type_id:ID, allclass:Boolean, isrequired:Boolean, events:[ID], courses:[ID]): CheckList,
+
+        deleteCheck(token:String! id:ID!):Boolean,
     }
 
     type CheckList {
@@ -177,6 +179,22 @@ export const resolvers = {
             }
             
         },
+        
+        deleteCheck: async (obj, {token, id}, context, info) => {
+            const tk_status = await token_control(token)
+            if(tk_status){
+                db.check_list.destroy({
+                    where:{
+                        id
+                    }
+                }).then(result=>{
+                    console.log(result)
+                    return true
+                })
+            } else {
+                throw new ApolloError("token is required",1000)
+            }
+        }
     },
     CheckList: {
         existevent: async (obj, args, context, info) => {
