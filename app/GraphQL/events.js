@@ -31,6 +31,8 @@ export const typeDefs = gql`
         lesson: Lesson
         classroom: Classroom
         checklist: [CheckList]
+        reports(create_user:ID): [Report]
+        report_exist: Boolean
     }
 `
 
@@ -127,6 +129,38 @@ export const resolvers = {
                     ]
                 }
             })
+        },
+        reports: async (obj, args, context, info) => {
+            
+            let where = {
+                event_id:obj.id
+            }
+            if(args.create_user){
+                where={
+                    ...where,
+                    create_user_id: args.create_user
+                }
+            }
+            return await db.reports.findAll({
+                where
+            })
+        },
+        report_exist: async (obj, args, context, info) => {
+            
+            let where = {
+                event_id:obj.id
+            }
+            if(args.create_user){
+                where={
+                    ...where,
+                    create_user_id: args.create_user
+                }
+            }
+            const reports = await db.reports.findAll({
+                where
+            })
+            return reports.length?true:false
+            
         },
     }
 }

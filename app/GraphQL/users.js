@@ -38,6 +38,7 @@ export const typeDefs = gql`
         roles(company_id: ID!):[Int]
         user_other_data(company_id: ID!,form_id:ID, form_ids:[ID]): [UserOtherData]
         events(class_id: ID, company_id: ID!, start: Date, end:Date): [Event]
+        events_as_teacher(class_id: ID, company_id: ID!, start: Date, end:Date): [Event]
         reports(company_id: ID!): [Report]
         courses: [Course]
     }
@@ -149,6 +150,28 @@ export const resolvers = {
                 id:{
                     [Op.in]:ids
                 }
+            }
+            if(args.start&&args.end){
+                where = {
+                    ...where,
+                    start:{
+                        [Op.between]:[new Date(args.start), new Date(args.end)]
+                    }
+                }
+            }
+            //console.log("-----------",new Date(), new Date(args.start), start)
+            if(args.class_id){
+                where = {
+                    ...where,
+                    class_id:args.class_id
+                }
+            }
+            return await db.events.findAll({where})
+        },
+        events_as_teacher: async (obj, args, context, info) => {
+            let where = {
+                teacher_id:obj.id,
+                company_id:args.company_id
             }
             if(args.start&&args.end){
                 where = {
