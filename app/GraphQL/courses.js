@@ -30,7 +30,7 @@ export const typeDefs = gql`
         lesson: Lesson
         classroom: Classroom
         count(company_id:ID): Int
-        events_count: Int
+        events_count(user_id: ID): Int
     }
 `
 
@@ -48,7 +48,7 @@ export const resolvers = {
                         is_archived:false
                     }
                 }
-                return db.classes.findAll({where})
+                return await db.classes.findAll({where})
             } else {
                 throw new ApolloError("token is required",1000)
             }
@@ -80,11 +80,20 @@ export const resolvers = {
             return await db.events.findAll({where})
         },
         events_count: async (obj, args, context, info) => {
-            return await db.events.count({
-                where:{
-                    class_id:obj.id
+            let where = {
+                class_id:obj.id
+            }
+            if(args.user_id){
+                const user_events = await db.event_users.findAll({where:{user_id:args.user_id}})
+                const ids = user_events.map(u=>u.event_id)
+                where = {
+                    ...where,
+                    id:{
+                        [Op.in]:ids
+                    }
                 }
-            })
+            }
+            return await db.events.count({where})
         },
         teacher: async (obj, args, context, info) => {
             return await db.users.findByPk(obj.teacher_id)

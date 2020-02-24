@@ -2,7 +2,6 @@ import { gql, ApolloError } from 'apollo-server-express'
 //import { GraphQLScalarType } from 'graphql';
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
-import moment from 'moment';
 
 
 
@@ -40,7 +39,8 @@ export const typeDefs = gql`
         events(class_id: ID, company_id: ID!, start: Date, end:Date): [Event]
         events_as_teacher(class_id: ID, company_id: ID!, start: Date, end:Date): [Event]
         reports(company_id: ID!): [Report]
-        courses: [Course]
+        courses(company_id: ID!): [Course]
+        course_count(company_id: ID!): Int
     }
 
 `
@@ -207,6 +207,7 @@ export const resolvers = {
             const events_id = events_user.map(e=>e.event_id)
             const events = await db.events.findAll({
                 where:{
+                    company_id:args.company_id,
                     id:{
                         [Op.in]:events_id
                     }
@@ -229,5 +230,38 @@ export const resolvers = {
                 }
             })
         },
+        course_count: async (obj, args, context, info) => {
+            const events_user = await db.event_users.findAll({
+                where:{
+                    user_id:obj.id
+                }
+            })
+            const events_id = events_user.map(e=>e.event_id)
+            const events = await db.events.findAll({
+                where:{
+                    company_id:args.company_id,
+                    id:{
+                        [Op.in]:events_id
+                    }
+                }
+            })
+            
+            const classes_id = events.map(e=>e.class_id)
+            
+            let courses_id = []
+            classes_id.map(e=>{
+                if(courses_id.findIndex(c=>c===e)==-1){
+                    courses_id.push(e)
+                }
+            })
+            const courses = await db.classes.findAll({
+                where:{
+                    id:{
+                       [Op.in]:courses_id 
+                    }
+                }
+            })
+            return courses.length
+        }
     }
 }
