@@ -5,7 +5,7 @@ import * as token_control from '../modules/token_control'
 
 export const typeDefs = gql`
     extend type Query {
-        reports(token:String!,company_id:ID!,create_user_id:ID): [Report]
+        reports(token:String!,company_id:ID!,create_user_id:ID,student_id:ID, report_type: ID): [Report]
         report(token:String!,id: ID!): Report
     }
 
@@ -43,7 +43,20 @@ export const resolvers = {
                     }
                 }
 
-                return db.reports.findAll(where)
+                if(args.student_id){
+                    where = {
+                        ...where,
+                        student_id:args.student_id
+                    }
+                }
+
+                if(args.report_type){
+                    where = {
+                        ...where,
+                        report_type:args.report_type
+                    }
+                }
+                return await db.reports.findAll({where})
             } else {
                 throw new ApolloError("token is required",1000)
             }

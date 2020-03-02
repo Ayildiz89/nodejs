@@ -14,7 +14,7 @@ export const typeDefs = gql`
     scalar Date
 
     type User {
-        id: ID!
+        id: ID
         first_name: String
         last_name: String
         email: String
