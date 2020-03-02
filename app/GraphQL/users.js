@@ -40,7 +40,7 @@ export const typeDefs = gql`
         events_as_teacher(class_id: ID, company_id: ID!, start: Date, end:Date): [Event]
         reports(company_id: ID!): [Report]
         courses(company_id: ID!): [Course]
-        course_count(company_id: ID!): Int
+        course_count(company_id: ID!): [Int]
     }
 
 `
@@ -245,7 +245,6 @@ export const resolvers = {
                     }
                 }
             })
-            
             const classes_id = events.map(e=>e.class_id)
             
             let courses_id = []
