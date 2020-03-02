@@ -30,6 +30,7 @@ export const typeDefs = gql`
         events:[Event]
         events_id:[ID]
         courses_id:[ID]
+        reports(event_id: ID, student_id: ID, course_id: ID): [Report]
     }
 `
 
@@ -250,6 +251,38 @@ export const resolvers = {
             })
             const filtered = events_check_id.filter(c=>c.dataValues.class_id!==null)
             return filtered.map(e=>e.dataValues.class_id)
+        },
+        reports: async (obj, args, context, info) => {
+            let where = {
+                check_id: obj.id
+            }
+            if(args.event_id){
+                where = {
+                    ...where,
+                    event_id:args.event_id
+                }
+            }
+            if(args.student_id){
+                where = {
+                    ...where,
+                    student_id:args.student_id
+                }
+            }
+            /*if(args.course_id){
+                const events = await db.events.findAll({
+                    where:{class_id:args.course_id}
+                })
+                const events_id = events.map(e=>e.id)                
+                where = {
+                    ...where,
+                    event_id: {
+                        [Op.in]:events_id
+                    }
+                }
+            }*/
+            return await db.reports.findAll({
+                where
+            })
         }
     }
 }

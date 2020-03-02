@@ -31,7 +31,7 @@ export const typeDefs = gql`
         lesson: Lesson
         classroom: Classroom
         checklist: [CheckList]
-        reports(create_user:ID): [Report]
+        reports(create_user:ID student_id:ID): [Report]
         report_exist: Boolean
     }
 `
@@ -139,6 +139,12 @@ export const resolvers = {
                 where={
                     ...where,
                     create_user_id: args.create_user
+                }
+            }
+            if(args.student_id){
+                where={
+                    ...where,
+                    student_id:args.student_id
                 }
             }
             return await db.reports.findAll({

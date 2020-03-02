@@ -6,11 +6,11 @@ const Op = db.Sequelize.Op;
 
 export const typeDefs = gql`
     extend type Query {
-        courses(token:String!,company_id: ID!, witharchived:Boolean): [Course]
-        course(token:String!,id: ID!): Course
+        viewcourses(token:String!,company_id: ID!, witharchived:Boolean): [Course]
+        viewcourse(token:String!,id: ID!): Course
     }
 
-    type Course {
+    type ViewCourse {
         id: ID!
         company_id: ID
         name: String
@@ -31,13 +31,12 @@ export const typeDefs = gql`
         classroom: Classroom
         count(company_id:ID): Int
         events_count(user_id: ID): Int
-        check_list: [CheckList]
     }
 `
 
 export const resolvers = {
     Query: {
-        courses: async (obj, args, context, info) => {
+        viewcourses: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
                 let where = {
@@ -54,7 +53,7 @@ export const resolvers = {
                 throw new ApolloError("token is required",1000)
             }
         },
-        course: async (obj, args, context, info) => {
+        viewcourse: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
                 return await db.classes.findByPk(args.id)
@@ -63,7 +62,7 @@ export const resolvers = {
             }
         }
     },
-    Course: {
+    ViewCourse: {
         events: async (obj, args, context, info) => {
             let where = {
                 class_id:obj.id
@@ -112,38 +111,6 @@ export const resolvers = {
                 }
             })
             //return courses.length
-        },
-        check_list: async (obj, args, context, info) => {
-            const events = await db.events.findAll({
-                where: {
-                    class_id:obj.id
-                }
-            })
-            const events_id = events.map(e=>e.id)
-            const event_check_list = await db.event_check_list.findAll({
-                where: {
-                    [Op.or]:
-                    {
-                        class_id: obj.id,
-                        events_id: {
-                            [Op.in]:events_id
-                        }
-                    }
-                }
-            })
-            const checks_id = event_check_list.map(e=>e.check_list_id)
-            const checks = db.check_list.findAll({
-                where: {
-                    [Op.or]:
-                    {
-                        allclass:true,
-                        id: {
-                            [Op.id]:checks_id
-                        }
-                    }
-                }
-            })
-            return checks
         }
     }
 }
