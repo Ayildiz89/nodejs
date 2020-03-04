@@ -3,9 +3,11 @@ import { gql, ApolloError } from 'apollo-server-express'
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
 
+const Op = db.Sequelize.Op;
+
 export const typeDefs = gql`
     extend type Query {
-        reports(token:String!,company_id:ID!,create_user_id:ID,student_id:ID, report_type: ID): [Report]
+        reports(token:String!,company_id:ID!,create_user_id:ID,student_id:ID, report_type: ID, course_id: ID, check_id: ID): [Report]
         report(token:String!,id: ID!): Report
     }
 
@@ -54,6 +56,28 @@ export const resolvers = {
                     where = {
                         ...where,
                         report_type:args.report_type
+                    }
+                }
+
+                if(args.check_id){
+                    where = {
+                        ...where,
+                        check_id:args.check_id
+                    }
+                }
+
+                if(args.course_id){
+                    const events = await db.events.findAll({
+                        where: {
+                            class_id:args.course_id
+                        }
+                    })
+                    const events_id = events.map(e=>e.id)
+                    where = {
+                        ...where,
+                        event_id: {
+                            [Op.in]:events_id
+                        }
                     }
                 }
                 return await db.reports.findAll({where})
