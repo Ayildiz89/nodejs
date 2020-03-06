@@ -7,7 +7,7 @@ const Op = db.Sequelize.Op;
 
 export const typeDefs = gql`
     extend type Query {
-        reports(token:String!,company_id:ID!,create_user_id:ID,student_id:ID, report_type: ID, course_id: ID, check_id: ID): [Report]
+        reports(token:String!,company_id:ID!,create_user_id:ID,student_id:ID, report_type: ID, course_id: ID, start: Date, end: Date, check_id: ID): [Report]
         report(token:String!,id: ID!): Report
     }
 
@@ -67,10 +67,19 @@ export const resolvers = {
                 }
 
                 if(args.course_id){
-                    const events = await db.events.findAll({
-                        where: {
-                            class_id:args.course_id
+                    const eventWhere = {
+                        class_id:args.course_id
+                    }
+                    if(args.start&&args.end){
+                        eventWhere = {
+                            ...where,
+                            start:{
+                                [Op.between]:[args.start, args.end]
+                            }
                         }
+                    }
+                    const events = await db.events.findAll({
+                        where: eventWhere
                     })
                     const events_id = events.map(e=>e.id)
                     where = {
