@@ -67,20 +67,21 @@ export const resolvers = {
                 }
 
                 if(args.course_id){
-                    const eventWhere = {
+                    let eventWhere = {
                         class_id:args.course_id
                     }
                     if(args.start&&args.end){
                         eventWhere = {
-                            ...where,
+                            ...eventWhere,
                             start:{
-                                [Op.between]:[args.start, args.end]
+                                [Op.between]:[args.start,args.end]
                             }
                         }
                     }
                     const events = await db.events.findAll({
                         where: eventWhere
                     })
+                    
                     const events_id = events.map(e=>e.id)
                     where = {
                         ...where,

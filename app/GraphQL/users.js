@@ -39,7 +39,7 @@ export const typeDefs = gql`
         events(class_id: ID, company_id: ID!, start: Date, end:Date): [Event]
         events_as_teacher(class_id: ID, company_id: ID!, start: Date, end:Date): [Event]
         reports(company_id: ID!): [Report]
-        courses(company_id: ID!): [Course]
+        courses(company_id: ID!, nofeature:Boolean): [Course]
         course_count(company_id: ID!): [Int]
     }
 
@@ -205,14 +205,21 @@ export const resolvers = {
                 }
             })
             const events_id = events_user.map(e=>e.event_id)
-            const events = await db.events.findAll({
-                where:{
-                    company_id:args.company_id,
-                    id:{
-                        [Op.in]:events_id
+            let where = {
+                company_id:args.company_id,
+                id:{
+                    [Op.in]:events_id
+                }
+            }
+            if(args.nofeature){
+                where = {
+                    ...where,
+                    start:{
+                        [Op.lt]:new Date()
                     }
                 }
-            })
+            }
+            const events = await db.events.findAll({where})
             
             const classes_id = events.map(e=>e.class_id)
             
@@ -227,7 +234,8 @@ export const resolvers = {
                     id:{
                        [Op.in]:courses_id 
                     }
-                }
+                },
+                order: [["created_at","DESC"]]
             })
         },
         course_count: async (obj, args, context, info) => {

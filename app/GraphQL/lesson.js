@@ -27,7 +27,6 @@ export const resolvers = {
                 return db.lesson.findAll({where:{
                     category_id:{[Op.in] : ids}
                 }})
-                
             } else {
                 throw new ApolloError("token is required",1000)
             }
