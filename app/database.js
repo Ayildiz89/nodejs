@@ -1,8 +1,7 @@
 const Sequelize = require('sequelize')
-
 var db = {}
 
-const sequelize = new Sequelize('flow', 'root', 'Aa20012001', {
+const sequelize = new Sequelize('educsys_db', 'root', 'Aa20012001', {
     host: '212.227.192.142',
     //host: '127.0.0.1',
     port: '3306',
