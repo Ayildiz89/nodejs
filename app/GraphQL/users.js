@@ -7,7 +7,7 @@ import * as token_control from '../modules/token_control'
 
 export const typeDefs = gql`
     extend type Query {
-        users(token:String!,company_id:ID!, role_id:ID, search:String): [User]
+        users(token:String!,company_id:ID!, role_id:ID, search:String, ids:[ID]): [User]
         user(token:String!,id: ID!): User
     }
 
@@ -62,8 +62,12 @@ export const resolvers = {
                 }
 
                 
-
-                const ids = (await db.user_company.findAll(where)).map(uc=>uc.user_id)
+                let ids;
+                if(args.ids){
+                    ids=args.ids
+                } else {
+                    ids = (await db.user_company.findAll(where)).map(uc=>uc.user_id)
+                }
                 const where2 = {
                     where:{id:{[Op.in] : ids}}
                 }
