@@ -37,7 +37,14 @@ export const resolvers = {
         company_template: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
-                return db.company_templates.findByPk(args.id)
+                //return 
+                let res
+                await db.company_templates.findByPk(args.id).then((a)=>res=a)
+                if(res) {
+                    return res
+                } else {
+                    throw new ApolloError("record is not found",5001,{messageType:1})
+                }
             } else {
                 throw new ApolloError("token is required",1000)
             }
