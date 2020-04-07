@@ -1,0 +1,1 @@
+export const associate = 1

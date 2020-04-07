@@ -1,17 +1,66 @@
 import { gql, ApolloError } from 'apollo-server-express'
 //import { GraphQLScalarType } from 'graphql';
 import * as db from '../database'
-import * as token_control from '../modules/token_control'
+import * as token_control from '../modules/token_control';
+const { sendMail } = require('../modules/sendMail')
 
+
+
+const { QueryTypes } = require('sequelize');
 
 
 export const typeDefs = gql`
     extend type Query {
         users(token:String!,company_id:ID!, role_id:ID, search:String, ids:[ID]): [User]
-        user(token:String!,id: ID!): User
+        user(token:String!,id: ID, company_id:ID, email: String): User
+        current_student_count(token:String, company_id:ID): Int
+        current_teacher_count(token:String, company_id:ID): Int
+    }
+
+    extend type Mutation {
+        createUser(
+            token:String
+            company_id: ID!
+            role_id: ID!
+            userData:UserData
+            form: [Form_]
+            emailsend: Boolean
+            ): User,
+        deneme(emre:Deneme, token:String):String
     }
 
     scalar Date
+
+    input Deneme {
+        id: ID,
+        name: String
+    }
+
+    input UserData {
+        first_name: String!
+        last_name: String!
+        email: String
+        birthday: Date
+        gender: Int
+        tel: String
+        address: String
+        country: String
+        city: String
+        postcode: String
+        street: String
+        houseno: String
+        salerate: String
+        lang: String
+    }
+
+    
+    
+
+    input Form_ {
+        form_id:ID!,
+        value:String
+    }
+
 
     type User {
         id: ID
@@ -41,6 +90,8 @@ export const typeDefs = gql`
         reports(company_id: ID!): [Report]
         courses(company_id: ID!, nofeature:Boolean): [Course]
         course_count(company_id: ID!): [Int]
+        students_statistics(company_id: ID!): StudentStatistics
+        student_status(company_id: ID!, continuing: Boolean, willstart: Boolean): [StudentStatus]
     }
 
 `
@@ -49,7 +100,7 @@ const Op = db.Sequelize.Op;
 export const resolvers = {
     Query: {
         users: async (obj, args, context, info) => {
-            const tk_status = await token_control(args.token)
+            const tk_status = await token_control(args.token, args.company_id)
             if(tk_status){
                 const where = {
                     where:{company_id:args.company_id}
@@ -98,11 +149,131 @@ export const resolvers = {
                 //throw 'You must be logged in';
             }
         },
-        user: async (obj, args, context, info) => {
+        user: async (obj, {id, email, company_id, token}, context, info) => {
+            const tk_status = await token_control(token, company_id)
+            if(tk_status){
+                if(email){
+                    let f_email;
+                    await db.users.findOne({
+                        where: {
+                            email:email
+                        }
+                    }).then(res=>{
+                        if(res) f_email = res;
+                        else throw new ApolloError("User id not found", 2003);
+                    }).catch(err=>{
+                        throw new ApolloError(err)
+                    })
+                    if(f_email)
+                    return f_email
+                } else 
+                return await db.users.findByPk(id)
+            } else {
+                throw new ApolloError("token is required",1000)
+            }
+        },
+        current_student_count: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             console.log(tk_status)
             if(tk_status){
-                return db.users.findByPk(args.id)
+                let count=1;
+                await db.sequelize.query(`CALL sp_current_students_count(${args.company_id}, 20)` , {
+                    plain: false,
+                    raw: false,
+                    type: QueryTypes.SELECT
+                  })
+                  .then(res=>
+                    {
+                        //console.log(res[0][0].user_count)
+                        count = res[0][0].user_count;
+                    }
+                    )
+                  .catch(err=>console.log("ERRRRRR",err))
+                return count
+            } else {
+                throw new ApolloError("token is required",1000)
+            }
+        },
+        current_teacher_count: async (obj, args, context, info) => {
+            const tk_status = await token_control(args.token)
+            console.log(tk_status)
+            if(tk_status){
+                let count=1;
+                await db.sequelize.query(`CALL sp_current_teacher_count(${args.company_id}, 20)` , {
+                    plain: false,
+                    raw: false,
+                    type: QueryTypes.SELECT
+                  })
+                  .then(res=>
+                    {
+                        console.log(res[0][0].user_count)
+                        count = res[0][0].user_count;
+                    }
+                    )
+                  .catch(err=>console.log("ERRRRRR",err))
+                return count
+            } else {
+                throw new ApolloError("token is required",1000)
+            }
+        },
+
+    },
+    Mutation: {
+        deneme: async (abj, {emre})=>{
+            console.log("------------>",emre.id,emre.name)
+            return emre.name
+        },
+        createUser: async (obj, {
+            token,
+            company_id,
+            emailsend=true,
+            userData,
+            role_id=4,
+            form=[],
+        }, context, info) => {
+            const tk_status = await token_control(token)
+            if(tk_status){
+                const user = await db.users.create(userData)
+                .then(result=>result)
+                .catch(err=>{
+                    throw new ApolloError(err,2001,{messageType:2})
+                });
+                
+                if(form.length)
+                {
+                    const indata = form.map(d=>{
+                        return {
+                            company_id,
+                            user_id:user.id,
+                            form_id: d.form_id,
+                            other_data: d.value
+                        }
+                    })
+                    const user_other_data = await db.user_other_data.bulkCreate(indata).then(res=>res).catch(err=>{
+                         console.log("ERRRRRRRRRR",err)
+                        db.users.destroy({where:{id:user.id}})
+                        throw new ApolloError(err,2001,{messageType:2})
+                    })
+                }
+
+                const user_company = await db.user_company.create({
+                    company_id,
+                    user_id: user.id,
+                    role_id
+                }).then(res=>res).catch(err=>{
+                    console.log("ERRRRRRRRRR",err)
+                    db.users.destroy({where:{id:user.id}})
+                    throw new ApolloError(err,2001,{messageType:2})
+                })
+
+
+                if(emailsend){
+                    sendMail({
+                        to:"eozbay@hotmail.com",
+                        from: "eozbayirtibat@yahoo.com",
+                    })
+                }
+                return user
             } else {
                 throw new ApolloError("token is required",1000)
             }
@@ -273,6 +444,50 @@ export const resolvers = {
                 }
             })
             return courses.length
-        }
+        },
+        students_statistics: async ({id}, {company_id}, context, info) => {
+            return await db.students_statistics.findOne({
+                where:{
+                    company_id,
+                    student_id:id
+                }
+            })
+        },
+        student_status: async ({id}, {company_id, continuing=false, willstart=false}, context, info) => {
+            let where = {
+                company_id,
+                student_id:id
+            }
+            if(continuing&&!willstart) {
+                where = {
+                    ...where,
+                    continuing:true
+                }
+            }
+            if(willstart&&!continuing) {
+                where = {
+                    ...where,
+                    willstart:true
+                }
+            }
+            if(continuing&&willstart){
+                where = {
+                    ...where,
+                    [Op.or]:[
+                        {
+                            continuing:true
+                        },
+                        {
+                            willstart:true
+                        }
+                    ]
+                }
+            }
+            const status =  await db.students_status.findAll({
+                where
+            })
+            return status
+        },
+        
     }
 }

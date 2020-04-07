@@ -24,7 +24,7 @@ module.exports = function(sequelize, DataTypes) {
 		},
 		child_data: {
 			type: DataTypes.STRING(500),
-			allowNull: false,
+			allowNull: true,
 		},
 		description: {
 			type: DataTypes.STRING(200),

@@ -5,7 +5,7 @@ import * as token_control from '../modules/token_control'
 
 export const typeDefs = gql`
     extend type Query {
-        form_data(token:String!,company_id:ID!, type_id: ID): [FormData]
+        form_data(token:String!,company_id:ID!, type_id: ID!): [FormData]
     }
 
     type FormData {
@@ -34,7 +34,8 @@ export const resolvers = {
                         type_id:args.type_id
                     }
                 }
-                return db.form_data.findAll({where})
+                const formData = await db.form_data.findAll({where})
+                return formData
             } else {
                 throw new ApolloError("token is required",1000)
             }

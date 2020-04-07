@@ -1,13 +1,15 @@
 import { gql, ApolloError } from 'apollo-server-express'
 import * as db from '../database'
 import * as token_control from '../modules/token_control'
+const { QueryTypes } = require('sequelize');
 
 const Op = db.Sequelize.Op;
 
 export const typeDefs = gql`
     extend type Query {
         current_courses(token:String!,company_id: ID!, witharchived:Boolean): [CurrentCourse]
-        count_current_courses(token:String!,company_id: ID!, witharchived:Boolean): Int
+        count_continuing_courses(token:String!,company_id: ID!, witharchived:Boolean): Int
+
     }
 
     type CurrentCourse {
@@ -63,13 +65,34 @@ export const resolvers = {
                 throw new ApolloError("token is required",1000)
             }
         },
-        count_current_courses:async (obj, args, context, info) => {
+        count_continuing_courses:async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
-                let where = {
-                    company_id:args.company_id
-                }
-                if(!args.witharchived){
+                let count=1;
+                await db.sequelize.query(`SELECT * FROM current_classes_count WHERE company_id = ${args.company_id} AND statu = 1` , {
+                    // A function (or false) for logging your queries
+                    // Will get called for every SQL query that gets sent
+                    // to the server.
+                    //logging: console.log,
+                  
+                    // If plain is true, then sequelize will only return the first
+                    // record of the result set. In case of false it will return all records.
+                    plain: false,
+                  
+                    // Set this to true if you don't have a model definition for your query.
+                    raw: false,
+                  
+                    // The type of query you are executing. The query type affects how results are formatted before they are passed back.
+                    type: QueryTypes.SELECT
+                  })
+                  .then(res=>
+                    {
+                        count = res[0].count;
+                    }
+                    )
+                  .catch(err=>console.log("ERRRRRR",err))
+                return count
+                /*if(!args.witharchived){
                     where = {
                         ...where,
                         [Op.or]:[{
@@ -82,11 +105,12 @@ export const resolvers = {
                 }
                 const count_current_courses = await db.current_classes.count({where})
                 
-                return count_current_courses
+                return count_current_courses*/
             } else {
                 throw new ApolloError("token is required",1000)
             }
-        }
+        },
+
         /*course: async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){

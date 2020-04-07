@@ -34,7 +34,10 @@ const server = new ApolloServer({
         require('./GraphQL/reports'),
         require('./GraphQL/view_courses'),
         require('./GraphQL/current_teacher'),
-        require('./GraphQL/current_courses')
+        require('./GraphQL/current_courses'),
+        require('./GraphQL/students_statistics'),
+        require('./GraphQL/students_status'),
+
     ],
     resolvers: resolveFunctions
 })
