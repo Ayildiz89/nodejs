@@ -2,13 +2,13 @@ const transporter = require('../confs/mail-conf')
 const { mail1Button } = require('../templates/mailTemplates')
 
 module.exports.sendMail = async function({
-    theme,
-    content,
     to,
     from,
-    subject
+    subject,
+    theme,
+    content,
 }){
-    let htmlText;
+    let htmlText="This E-mail has sent by EDUCSYS Teams";
     switch(theme){
         case "1Button":
             htmlText = mail1Button(content);

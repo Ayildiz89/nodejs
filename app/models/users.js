@@ -46,7 +46,7 @@ module.exports = function(sequelize, DataTypes) {
 			allowNull: true
 		},
 		is_verified: {
-			type: DataTypes.BOOLEAN,
+			type: DataTypes.INTEGER,
 			allowNull: true
 		},
 		password: {

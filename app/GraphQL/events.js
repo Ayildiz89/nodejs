@@ -7,7 +7,16 @@ const Op = db.Sequelize.Op;
 
 export const typeDefs = gql`
     extend type Query {
-        events(token:String! class_id: ID, company_id: ID!, student_id: ID, start: Date, end:Date, teacher_id: ID): [Event]
+        events(
+            token:String! 
+            class_id: ID, 
+            company_id: ID!, 
+            student_id: ID, 
+            start: Date, 
+            end:Date, 
+            teacher_id: ID,
+            reportnotnull: Boolean
+            ): [Event]
         event(token:String!,id: ID!): Event
     }
 
@@ -31,7 +40,7 @@ export const typeDefs = gql`
         lesson: Lesson
         classroom: Classroom
         checklist: [CheckList]
-        reports(create_user:ID student_id:ID): [Report]
+        reports(create_user:ID student_id:ID, report_type: ID): [Report]
         report_exist: Boolean
     }
 `
@@ -151,6 +160,12 @@ export const resolvers = {
                 where={
                     ...where,
                     student_id:args.student_id
+                }
+            }
+            if(args.report_type){
+                where={
+                    ...where,
+                    report_type:args.report_type
                 }
             }
             return await db.reports.findAll({

@@ -10,12 +10,17 @@ const { QueryTypes } = require('sequelize');
 
 
 export const typeDefs = gql`
+
     extend type Query {
         users(token:String!,company_id:ID!, role_id:ID, search:String, ids:[ID]): [User]
         user(token:String!,id: ID, company_id:ID, email: String): User
         current_student_count(token:String, company_id:ID): Int
         current_teacher_count(token:String, company_id:ID): Int
+        student_reports(user_id:ID!, company_id:ID!, token:String!):[UserReport]
     }
+
+    scalar Date
+
 
     extend type Mutation {
         createUser(
@@ -26,15 +31,16 @@ export const typeDefs = gql`
             form: [Form_]
             emailsend: Boolean
             ): User,
-        deneme(emre:Deneme, token:String):String
+        deleteUser(token:String!,id: ID!):Boolean,
+        updateUser(token:String
+            id: ID!
+            company_id: ID!
+            userData:UserUpdateData!
+            form: [Form_]
+            emailsend: Boolean):User
     }
 
-    scalar Date
 
-    input Deneme {
-        id: ID,
-        name: String
-    }
 
     input UserData {
         first_name: String!
@@ -53,8 +59,22 @@ export const typeDefs = gql`
         lang: String
     }
 
-    
-    
+    input UserUpdateData {
+        first_name: String
+        last_name: String
+        email: String
+        birthday: Date
+        gender: Int
+        tel: String
+        address: String
+        country: String
+        city: String
+        postcode: String
+        street: String
+        houseno: String
+        salerate: String
+        lang: String
+    }
 
     input Form_ {
         form_id:ID!,
@@ -92,6 +112,17 @@ export const typeDefs = gql`
         course_count(company_id: ID!): [Int]
         students_statistics(company_id: ID!): StudentStatistics
         student_status(company_id: ID!, continuing: Boolean, willstart: Boolean): [StudentStatus]
+    }
+
+
+    type UserReport {
+        class_id: ID,
+        value: String,
+        type_id: ID,
+        check_id: ID,
+        check_name: String,
+        point: Date,
+        class_name: String
     }
 
 `
@@ -206,7 +237,7 @@ export const resolvers = {
                   })
                   .then(res=>
                     {
-                        console.log(res[0][0].user_count)
+                        //console.log(res[0][0].user_count)
                         count = res[0][0].user_count;
                     }
                     )
@@ -216,23 +247,48 @@ export const resolvers = {
                 throw new ApolloError("token is required",1000)
             }
         },
-
+        student_reports: async (obj, args, context, info) => {
+            const tk_status = await token_control(args.token)
+            console.log(tk_status)
+            if(tk_status){
+                const data = await db.sequelize.query(`CALL sp_user_reports(${args.company_id}, ${args.user_id})`)
+                  .then(res=>
+                    {
+                        return res
+                    }
+                    )
+                  .catch(err=>console.log("ERRRRRR",err))
+                return data
+            } else {
+                throw new ApolloError("token is required",1000)
+            }
+        }
     },
     Mutation: {
-        deneme: async (abj, {emre})=>{
-            console.log("------------>",emre.id,emre.name)
-            return emre.name
-        },
         createUser: async (obj, {
             token,
             company_id,
             emailsend=true,
             userData,
-            role_id=4,
+            role_id=5,
             form=[],
         }, context, info) => {
             const tk_status = await token_control(token)
             if(tk_status){
+                if(userData.email){
+                    const u = await db.users.findOne({where:{email:userData.email}})
+                    if(u){
+                        throw new ApolloError("Email is exist",2005,{messageType:2})
+                    }
+
+                    if(emailsend){
+                        sendMail({
+                            title: "deneme",
+                            to:userData.email,
+                            from: "register@educsys.de",
+                        })
+                    }
+                }
                 const user = await db.users.create(userData)
                 .then(result=>result)
                 .catch(err=>{
@@ -265,16 +321,86 @@ export const resolvers = {
                     db.users.destroy({where:{id:user.id}})
                     throw new ApolloError(err,2001,{messageType:2})
                 })
-
-
-                if(emailsend){
-                    sendMail({
-                        to:"eozbay@hotmail.com",
-                        from: "eozbayirtibat@yahoo.com",
-                    })
-                }
                 return user
             } else {
+                throw new ApolloError("token is required",1000)
+            }
+        },
+        updateUser: async (obj, {
+            token,
+            id,
+            company_id,
+            emailsend=false,
+            userData,
+            form=[],
+        }, context, info) => {
+            const tk_status = await token_control(token)
+            if(tk_status){
+                const user = await db.users.findByPk(id)
+                //console.log("-------->",user)
+                if(user){
+                    let updatedUser;
+                     await user.update(userData).then((uu)=>
+                     {
+                         updatedUser = uu
+                     }
+                     ).catch((err)=>console.log("-E-R-R-O-R------>",err))
+                    console.log("---------->!",form)
+                    if(form.length)
+                    {
+                        const indata = form.map(d=>{
+                            return {
+                                company_id,
+                                user_id:user.id,
+                                form_id: d.form_id,
+                                other_data: d.value
+                            }
+                        })
+
+                        // DÜZELT -------------
+                        // Daha iyi nasil yapilabilir.
+                        const ids = indata.map(dd=>dd.form_id)
+                        db.user_other_data.destroy(
+                            {
+                                where:{
+                                    form_id:{[Op.in]:ids},
+                                    user_id:id
+                                }
+                            }).then(res=>console.log(res)).catch(err=>console.log(err))
+                        const user_other_data = await db.user_other_data.bulkCreate(indata).then(res=>res).catch(err=>{
+                            console.log("ERRRRRRRRRR",err)
+                            //db.users.destroy({where:{id:user.id}})
+                            throw new ApolloError(err,2001,{messageType:2})
+                        })
+                    }
+                    return updatedUser;
+                } else {
+                    throw new ApolloError("User is not found", 2003,{messageType:2})
+                }
+            } else {
+                throw new ApolloError("token is required",1000)
+            }
+        },
+        deleteUser: async (obj, {token, id}, context, info) => {
+            const tk_status = await token_control(token)
+            if(tk_status){
+                const user = await db.users.findByPk(id)
+                if(user){
+                    db.users.destroy({where:{id}}).then(res=>{}).catch(err=>{
+                        console.log(err)
+                        throw new ApolloError(err, 0,{messageType:2})
+                    })
+                    db.event_users.destroy({where:{user_id:id}}).catch(err=>console.error(err))
+                    db.user_company.destroy({where:{user_id:id}}).catch(err=>console.error(err))
+                    db.user_other_data.destroy({where:{user_id:id}}).catch(err=>console.error(err))
+                    //db.user_settings.destroy({where:{user_id:id}}).catch(err=>console.error(err))
+                    db.reports.destroy({where:{srudent_id:id}})
+                    return true
+                } else {
+                    throw new ApolloError("User is not found", 2003,{messageType:2})
+                }
+            }
+            else {
                 throw new ApolloError("token is required",1000)
             }
         }

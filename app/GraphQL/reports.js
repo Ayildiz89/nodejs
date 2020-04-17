@@ -7,7 +7,18 @@ const Op = db.Sequelize.Op;
 
 export const typeDefs = gql`
     extend type Query {
-        reports(token:String!,company_id:ID!,create_user_id:ID,student_id:ID, report_type: ID, course_id: ID, start: Date, end: Date, check_id: ID): [Report]
+        reports(
+            token:String!,
+            company_id:ID!,
+            create_user_id:ID,
+            student_id:ID, 
+            report_type: ID, 
+            course_id: ID, 
+            start: Date, 
+            end: Date, 
+            check_id: ID,
+            report_type: ID
+            ): [Report]
         report(token:String!,id: ID!): Report
     }
 
@@ -63,6 +74,13 @@ export const resolvers = {
                     where = {
                         ...where,
                         check_id:args.check_id
+                    }
+                }
+
+                if(args.report_type){
+                    where = {
+                        ...where,
+                        report_type:args.report_type
                     }
                 }
 

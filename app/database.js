@@ -29,6 +29,7 @@ let models = [
     require('./models/current_courses'),
     require('./models/students_status'),
     require('./models/students_statistics'),
+    
 ]
 
 // Initialize models
@@ -40,6 +41,7 @@ models.forEach(model => {
 // Apply associations
 Object.keys(db).forEach(key => {
     if ('associate' in db[key]) {
+        db[key].associate(db)
         console.log("A----------->",db[key])
     }
 })
