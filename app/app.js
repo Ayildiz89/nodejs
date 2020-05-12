@@ -37,14 +37,14 @@ const server = new ApolloServer({
         require('./GraphQL/current_courses'),
         require('./GraphQL/students_statistics'),
         require('./GraphQL/students_status'),
-
+        require('./GraphQL/others')
     ],
     resolvers: resolveFunctions
 })
 
 server.applyMiddleware({ app })
 
-app.get('/', (req, res) => res.send('Hello World!'))
+app.get('/', (req, res) => res.send('Welcome to EDUCSYS!'))
 
 app.listen({ port: 5000 }, () =>
     console.log(`🚀 Server ready at http://localhost:5000`),
