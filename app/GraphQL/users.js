@@ -2,6 +2,8 @@ import { gql, ApolloError } from 'apollo-server-express'
 //import { GraphQLScalarType } from 'graphql';
 import * as db from '../database'
 import * as token_control from '../modules/token_control';
+import verifications_code from '../models/verifications_code';
+import createVirificationCode from '../modules/createVirificationCode';
 const { sendMail } = require('../modules/sendMail')
 
 
@@ -12,6 +14,7 @@ const { QueryTypes } = require('sequelize');
 export const typeDefs = gql`
 
     extend type Query {
+
         users(token:String!,company_id:ID!, role_id:ID, search:String, ids:[ID]): [User]
         user(token:String!,id: ID, company_id:ID, email: String): User
 
@@ -26,7 +29,7 @@ export const typeDefs = gql`
     extend type Mutation {
         createUser(
             token:String
-            company_id: ID!
+            company_id: ID
             role_id: ID!
             userData:UserData
             form: [Form_]
@@ -39,9 +42,8 @@ export const typeDefs = gql`
             userData:UserUpdateData!
             form: [Form_]
             emailsend: Boolean):User
+        _createVerificationCode(token:String, user_id:ID):Boolean
     }
-
-
 
     input UserData {
         first_name: String!
@@ -272,6 +274,10 @@ export const resolvers = {
         }
     },
     Mutation: {
+        _createVerificationCode: async (obj, args, context, info) => {
+            console.log("---------------->",args.token)
+            return createVirificationCode(args.token,args.user_id)
+        },
         createUser: async (obj, {
             token,
             company_id,

@@ -1,10 +1,11 @@
 module.exports = [
     //'flow', 'root', 'Aa20012001', {
-    'flow', 'root', '', {
-        //host: '212.227.192.142',
-        host: '127.0.0.1',
-        //port: '3306',
-        port: '8889',
+    'test_db_for_dev', 'developer_educsys', 'h1Jev7?9', {
+        host: '212.227.192.142',
+        //host: 'localhost',
+        //host: '127.0.0.1',
+        port: '3306',
+        //port: '8889',
         dialect: 'mysql',
         define: {
             freezeTableName: true,
