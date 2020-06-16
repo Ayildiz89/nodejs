@@ -14,6 +14,7 @@ export const typeDefs = gql`
     extend type Query {
         users(token:String!,company_id:ID!, role_id:ID, search:String, ids:[ID]): [User]
         user(token:String!,id: ID, company_id:ID, email: String): User
+
         current_student_count(token:String, company_id:ID): Int
         current_teacher_count(token:String, company_id:ID): Int
         student_reports(user_id:ID!, company_id:ID!, token:String!):[UserReport]
@@ -109,9 +110,16 @@ export const typeDefs = gql`
         events_as_teacher(class_id: ID, company_id: ID!, start: Date, end:Date): [Event]
         reports(company_id: ID!): [Report]
         courses(company_id: ID!, nofeature:Boolean): [Course]
-        course_count(company_id: ID!): [Int]
+        course_count(company_id: ID!): CourseCount
         students_statistics(company_id: ID!): StudentStatistics
         student_status(company_id: ID!, continuing: Boolean, willstart: Boolean): [StudentStatus]
+    }
+
+    type CourseCount {
+        all: Int,
+        willstart: Int,
+        continuing: Int,
+        complated: Int
     }
 
 
@@ -142,14 +150,13 @@ export const resolvers = {
                         role_id:args.role_id
                     }
                 }
-
-                
                 let ids;
                 if(args.ids){
                     ids=args.ids
                 } else {
                     ids = (await db.user_company.findAll(where)).map(uc=>uc.user_id)
                 }
+                
                 const where2 = {
                     where:{id:{[Op.in] : ids}}
                 }
@@ -547,6 +554,10 @@ export const resolvers = {
             })
             const events_id = events_user.map(e=>e.event_id)
             const events = await db.events.findAll({
+                order: [
+                    ['class_id', 'asc'],
+                    ['start', 'asc'], 
+                ],
                 where:{
                     company_id:args.company_id,
                     id:{
@@ -562,14 +573,36 @@ export const resolvers = {
                     courses_id.push(e)
                 }
             })
-            const courses = await db.classes.findAll({
+            let courses = await db.classes.findAll({
                 where:{
                     id:{
                        [Op.in]:courses_id 
                     }
                 }
             })
-            return courses.length
+            const courses_status = courses.map(c=>{
+                const course_events = events.filter(e=>e.class_id===c.id)
+                let status;
+                //0:complated, 1: contuning, 2: willstart
+                const first_event_start = course_events[0].start
+                const last_event_start = course_events[course_events.length-1].start
+                if(new Date(last_event_start)<new Date()) {
+                    status = 0;
+                } else if(first_event_start<=new Date()&&last_event_start>=new Date()) {
+                    status = 1;
+                } else {
+                    status = 2;
+                }
+                return status
+                
+            })
+            const res = {
+                all: courses_status.length,
+                complated: courses_status.filter(s=>s===0).length,
+                continuing: courses_status.filter(s=>s===1).length,
+                willstart: courses_status.filter(s=>s===2).length
+            }
+            return res
         },
         students_statistics: async ({id}, {company_id}, context, info) => {
             return await db.students_statistics.findOne({

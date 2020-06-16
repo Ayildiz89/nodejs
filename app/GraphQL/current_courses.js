@@ -68,25 +68,15 @@ export const resolvers = {
         count_continuing_courses:async (obj, args, context, info) => {
             const tk_status = await token_control(args.token)
             if(tk_status){
-                let count=1;
+                let count=null;
                 await db.sequelize.query(`SELECT * FROM current_classes_count WHERE company_id = ${args.company_id} AND statu = 1` , {
-                    // A function (or false) for logging your queries
-                    // Will get called for every SQL query that gets sent
-                    // to the server.
-                    //logging: console.log,
-                  
-                    // If plain is true, then sequelize will only return the first
-                    // record of the result set. In case of false it will return all records.
                     plain: false,
-                  
-                    // Set this to true if you don't have a model definition for your query.
                     raw: false,
-                  
-                    // The type of query you are executing. The query type affects how results are formatted before they are passed back.
                     type: QueryTypes.SELECT
                   })
                   .then(res=>
                     {
+                        console.log("--------->",res)
                         count = res[0].count;
                     }
                     )

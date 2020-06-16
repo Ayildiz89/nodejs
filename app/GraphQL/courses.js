@@ -7,7 +7,14 @@ const Op = db.Sequelize.Op;
 export const typeDefs = gql`
     extend type Query {
         courses(token:String!,company_id: ID!, witharchived:Boolean): [Course]
-        course(token:String!,id: ID!): Course
+        course(token:String!,id: ID!): Course,
+        courses_statistic(token:String!,company_id: ID!): CoursesStatistic
+    }
+
+    type CoursesStatistic {
+        complated: Int,
+        willstart: Int,
+        contuning: Int
     }
 
     type Course {
@@ -32,6 +39,7 @@ export const typeDefs = gql`
         count(company_id:ID): Int
         events_count(user_id: ID): Int
         check_list: [CheckList]
+        status: Int
     }
 `
 
@@ -49,7 +57,9 @@ export const resolvers = {
                         is_archived:false
                     }
                 }
-                return await db.classes.findAll({where})
+                const courses = await db.classes.findAll({where})
+                console.log(courses.length)
+                return courses
             } else {
                 throw new ApolloError("token is required",1000)
             }
@@ -61,6 +71,9 @@ export const resolvers = {
             } else {
                 throw new ApolloError("token is required",1000)
             }
+        },
+        courses_statistic: async (obj, args, context, info) => {
+
         }
     },
     Course: {
@@ -78,7 +91,31 @@ export const resolvers = {
                     }
                 }
             }
-            return await db.events.findAll({where})
+            const events = await db.events.findAll({
+                order:[['start', 'asc']],
+                where
+            })
+            return events
+        },
+        status: async (obj, args, context, info) => {
+            let where = {
+                class_id:obj.id
+            }
+            if(args.user_id){
+                const user_events = await db.event_users.findAll({where:{user_id:args.user_id}})
+                const ids = user_events.map(u=>u.event_id)
+                where = {
+                    ...where,
+                    id:{
+                        [Op.in]:ids
+                    }
+                }
+            }
+            const events = await db.events.findAll({
+                order:[['start', 'asc']],
+                where
+            })
+            return (new Date(events[0].start)>new Date())?2:((new Date(events[events.length-1].start)>=new Date())&&(events[0].start<=new Date())?1:0)
         },
         events_count: async (obj, args, context, info) => {
             let where = {
