@@ -42,6 +42,7 @@ export const typeDefs = gql`
             userData:UserUpdateData!
             form: [Form_]
             emailsend: Boolean):User
+
         _createVerificationCode(token:String, user_id:ID):Boolean
     }
 
@@ -275,8 +276,8 @@ export const resolvers = {
     },
     Mutation: {
         _createVerificationCode: async (obj, args, context, info) => {
-            console.log("---------------->",args.token)
-            return createVirificationCode(args.token,args.user_id)
+            //console.log("---------------->",args.token)
+            return createVirificationCode(args.token,parseInt(args.user_id))
         },
         createUser: async (obj, {
             token,

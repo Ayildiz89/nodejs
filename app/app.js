@@ -1,6 +1,7 @@
 import '@babel/polyfill'
 import express from 'express';
 import verifications_code from './models/verifications_code';
+import { sendMail } from './modules/sendMail';
 const GraphQLJSON = require('graphql-type-json');
 const bodyParser = require('body-parser');
 const { ApolloServer } = require('apollo-server-express')
@@ -46,6 +47,16 @@ const server = new ApolloServer({
 server.applyMiddleware({ app })
 
 app.get('/', (req, res) => res.send('Welcome to EDUCSYS!'))
+
+app.get('/trymail', (req, res) => {
+    console.log(sendMail({
+        to:"eozbay@hotmail.com",
+        from:"member@educsys.de",
+        subject:"Denmeeeee",
+        theme:"verification_code",
+        title:"AAAA"}))
+    return res.send("Mail gömnderildi")
+})
 
 app.listen({ port: 5000 }, () =>
     console.log(`🚀 Server ready at http://localhost:5000`),
