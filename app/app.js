@@ -54,7 +54,7 @@ app.get('/trymail', (req, res) => {
         subject:"Denmeeeee",
         theme:"verification_code",
         title:"AAAA"})
-    return res.send("Mail gömnderildi")
+    return res.send("Mail gönderildi")
 })
 
 app.listen({ port: 5000 }, () =>

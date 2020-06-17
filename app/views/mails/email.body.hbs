@@ -2,16 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Best Website</title>
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <link rel="stylesheet" href="/css/main.min.css">
+   <style>
+    h3 {
+      font-family: Roboto,sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-shadow: 1px 1px 1px rgba(0,0,0,.004);
+    }
+    .code {
+      font-size:24px;
+    }
+    .text {
+      font-color: red;
+    }
+    a {
+      font-size: 16px;
+    }
+  </style>
 </head>
 
-<body class="{{template}}">
-  <div class="container">
-	  {{{body}}}
-  </div>
-</body>
+<div class="container">
+    <h3><a href="https://educsys.de">EDUCSYS</a></h3>
+    {{{body}}}
+</div>
 </html>
