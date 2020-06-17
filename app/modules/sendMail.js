@@ -1,9 +1,7 @@
 const transporter = require('../confs/mail-conf')
 const { mail1Button } = require('../templates/mailTemplates')
 
-const Handlebars = require('handlebars')
-//const verificatin_code_tamplate = require('../views/mails/verification_code.handlebars')
-//const template = Handlebars.compile(verificatin_code_tamplate)
+
 
 module.exports.sendMail = async function({
     to,
@@ -31,7 +29,7 @@ module.exports.sendMail = async function({
         //html: htmlText,
         text:"nnnnn",
         template: 'verification_code',
-        content: {
+        context: {
             title:"Baslik",
             message:"Mesaj",
             code:"012541"

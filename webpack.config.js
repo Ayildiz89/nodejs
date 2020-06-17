@@ -17,7 +17,7 @@ module.exports = {
     },
     resolve: {
         // Add `.ts` and `.tsx` as a resolvable extension.
-        extensions: ['.graphql', '.jsx', '.js'],
+        extensions: ['.graphql', '.jsx', '.js', '.hbs'],
     },
     module: {
         rules: [
