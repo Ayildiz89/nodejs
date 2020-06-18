@@ -9,20 +9,38 @@
       -moz-osx-font-smoothing: grayscale;
       text-shadow: 1px 1px 1px rgba(0,0,0,.004);
     }
+    a {
+      font-size: 21px;
+      font-weight: 300;
+      line-height: 70px;
+      -webkit-letter-spacing: 3px;
+      -moz-letter-spacing: 3px;
+      -ms-letter-spacing: 3px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      display: block;
+      -webkit-text-decoration: none;
+      text-decoration: none;
+    }
     .code {
       font-size:24px;
     }
     .text {
-      font-color: red;
+      margin-bottom: 10px;
     }
-    a {
-      font-size: 16px;
+    .title {
+      text-align: center;
+    }
+    .body {
+      text-align: center;
     }
   </style>
 </head>
 
 <div class="container">
-    <h3><a href="https://educsys.de">EDUCSYS</a></h3>
-    {{{body}}}
+    <div class="title"><h3><a href="https://app.educsys.de">EDUCSYS</a></h3></div>
+    <div class="body">
+      {{{body}}}
+    </div>
 </div>
 </html>

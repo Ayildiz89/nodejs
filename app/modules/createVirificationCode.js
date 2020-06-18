@@ -1,5 +1,5 @@
 const db = require('../database')
-const { sendMail } = require('./sendMail')
+const transporter = require('../confs/mail-conf');
 
 module.exports = async function(token, user_id=null){
     const user = await db.users.findOne({where:{remember_token:token}})
@@ -26,7 +26,20 @@ module.exports = async function(token, user_id=null){
 
 
         await db.verifications_code.create(data).then(res=>{
-            sendMail
+            //console.log(res)
+            if(user.email){
+                transporter.sendMail({
+                    to: user.email,
+                    from: "verification@educsys.de",
+                    subject: "Verification",
+                    text:"Verification",
+                    template: 'verification_code',
+                    context: {
+                        code:res.code,
+                        text:"Dogrulama kodunuz:"
+                    }
+                })
+            }
         }).catch(err=>{return false})
         return true
     } else {

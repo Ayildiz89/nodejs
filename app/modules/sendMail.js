@@ -30,8 +30,8 @@ module.exports.sendMail = async function({
         text:"nnnnn",
         template: 'verification_code',
         context: {
-            code:"003455",
-            text:"Dogrulama kodunuz"
+            code:"0034455",
+            text:"Dogrulama kodunuz:"
         }
       }).then(res=>{return res});
 };
