@@ -396,6 +396,7 @@ export const resolvers = {
             }
         },
         deleteUser: async (obj, {token, id}, context, info) => {
+            // Test edilecek
             const tk_status = await token_control(token)
             if(tk_status){
                 const user = await db.users.findByPk(id)
