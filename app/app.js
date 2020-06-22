@@ -50,10 +50,13 @@ app.get('/', (req, res) => res.send('Welcome to EDUCSYS!'))
 app.get('/trymail', (req, res) => {
     sendMail({
         to:"eozbayirtibat@gmail.com",
-        from:"member@educsys.de",
+        from:"EDUCSYS <member@educsys.de>",
         subject:"Denmeeeee",
-        theme:"verification_code",
-        title:"AAAA"})
+        template:"verification_code",
+        context:{
+            text: "Dogrulama kodunuz:",
+            code: "25675"
+        }})
     return res.send("Mail gönderildi")
 })
 

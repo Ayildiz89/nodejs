@@ -1,5 +1,6 @@
 const transporter = require('../confs/mail-conf')
-const { mail1Button } = require('../templates/mailTemplates')
+const { mail1Button } = require('../templates/mailTemplates');
+const db = require('../database');
 
 
 
@@ -7,37 +8,46 @@ module.exports.sendMail = async function({
     to,
     from,
     subject,
-    theme,
-    content,
+    template,
+    context,
 }){
-    let htmlText="This E-mail has sent by EDUCSYS Teams";
-    switch(theme){
-        case "1Button":
-            htmlText = mail1Button(content);
-            break;
-        case "verification_code":
-            htmlText = "sss"//template({message:"Kodunuz asagidadir",title:"Dogrulama"})
-            break;
-        default:
-            htmlText = `<h1>${content.title}</h1><p>${content.text}</p>`
-            break;
+
+    let options = {
+        plattform_id: 1,
+        //email_id: null // Burasi mail servisi kullanilinca acilacak
+        to_email:to,
+        sending_user_id:null,
+        template,
+        context_email:JSON.stringify(context),
+        sending_company_id:null,
+        template_varsion:1
     }
-    return transporter.sendMail({
+
+
+    transporter.sendMail({
         to,
         from,
         subject,
         //html: htmlText,
-        text:"nnnnn",
-        template: 'verification_code',
-        context: {
-            code:"003455",
-            text:"Dogrulama kodunuz"
+        text:"EDUCSYS",
+        template,
+        context
+    }).then(res=>{
+
+        if(res.message==="success"){
+            options = {
+                ...options,
+                status:1
+            }
+        } else {
+            options = {
+                ...options,
+                status:0
+            }
         }
-      }).then(res=>{return res});
+        db.sent_mails.create(options)
+    });
+    
+    
+    
 };
-
-/**
- * 
- * 
-
- */
