@@ -29,7 +29,8 @@ let models = [
     require('./models/current_courses'),
     require('./models/students_status'),
     require('./models/students_statistics'),
-    require('./models/verifications_code')
+    require('./models/verifications_code'),
+    require('./models/sent_mails')
     
 ]
 
