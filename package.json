@@ -26,6 +26,7 @@
         "graphql-scalars": "^1.1.5",
         "graphql-type-json": "^0.3.2",
         "handlebars": "^4.7.6",
+        "lodash": "^4.17.15",
         "moment": "^2.26.0",
         "mysql2": "^1.6.5",
         "nodemailer": "^6.4.8",

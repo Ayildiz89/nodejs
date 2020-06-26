@@ -69,7 +69,7 @@ export const resolvers = {
             const tk_status = await token_control(args.token)
             if(tk_status){
                 let count=null;
-                await db.sequelize.query(`SELECT * FROM current_classes_count WHERE company_id = ${args.company_id} AND statu = 1` , {
+                /*await db.sequelize.query(`SELECT * FROM current_classes_count WHERE company_id = ${args.company_id} AND statu = 1` , {
                     plain: false,
                     raw: false,
                     type: QueryTypes.SELECT
@@ -80,8 +80,8 @@ export const resolvers = {
                         count = res[0].count;
                     }
                     )
-                  .catch(err=>console.log("ERRRRRR",err))
-                return count
+                  .catch(err=>console.log("ERRRRRR",err))*/
+                return 1
                 /*if(!args.witharchived){
                     where = {
                         ...where,
