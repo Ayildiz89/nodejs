@@ -1,6 +1,7 @@
 import '@babel/polyfill'
 import express from 'express';
 import { sendMail } from './modules/sendMail';
+const dotenv = require('dotenv');
 const GraphQLJSON = require('graphql-type-json');
 const bodyParser = require('body-parser');
 const { ApolloServer } = require('apollo-server-express')
@@ -10,7 +11,9 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
 
+dotenv.config()
 
+const port = process.env.PORT || 5000;
 
 const resolveFunctions = {
     JSON: GraphQLJSON
@@ -45,7 +48,7 @@ const server = new ApolloServer({
 
 server.applyMiddleware({ app })
 
-app.get('/', (req, res) => res.send('Welcome to EDUCSYS!'))
+app.get('/', (req, res) => res.send(`Welcome to EDUCSYS!`))
 
 app.get('/trymail', (req, res) => {
     sendMail({
@@ -60,7 +63,7 @@ app.get('/trymail', (req, res) => {
     return res.send("Mail gönderildi")
 })
 
-app.listen({ port: 5000 }, () =>
-    console.log(`🚀 Server ready at http://localhost:5000`),
+app.listen({ port }, () =>
+    console.log(`🚀 Server ready at http://localhost:${port}`),
 )
 

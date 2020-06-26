@@ -1,11 +1,12 @@
+const dotenv = require("dotenv")
+dotenv.config()
+
+const { DB_NAME, DB_USER, DB_PASS, DB_HOST, DB_PORT} = process.env;
+
 module.exports = [
-    //'flow', 'root', 'Aa20012001', {
-    'test_db_for_dev', 'developer_educsys', 'h1Jev7?9', {
-        host: '212.227.192.142',
-        //host: 'localhost',
-        //host: '127.0.0.1',
-        port: '3306',
-        //port: '8889',
+    DB_NAME, DB_USER, DB_PASS, {
+        host: DB_HOST,
+        port: DB_PORT,
         dialect: 'mysql',
         define: {
             freezeTableName: true,
