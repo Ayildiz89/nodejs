@@ -26,7 +26,6 @@ export const typeDefs = gql`
 
     scalar Date
 
-
     extend type Mutation {
         createUser(
             token:String
@@ -224,6 +223,7 @@ export const resolvers = {
                 const events = await db.events.findAll({
                     where:
                     {
+                        company_id:args.company_id,
                         start:
                         {
                             [Op.between]:[new Date(today), new Date(nextDate)]
