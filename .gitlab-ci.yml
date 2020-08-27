@@ -1,0 +1,50 @@
+image: docker:latest
+services:
+  - docker:dind
+
+variables:
+  WORK_DIR: ${CI_PROJECT_NAME}
+  BRANCH: ${CI_COMMIT_REF_NAME}
+  REGISTRY: registry.gitlab.com/emreozbay/nodeapi   
+
+stages:
+  - build
+  - test
+  - deploy
+
+build_project:
+  stage: build
+  script:
+      - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+      - docker build -t $REGISTRY .
+      - docker push $REGISTRY
+  
+test_project: 
+  stage: test
+  script:
+      - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+      - docker pull $REGISTRY
+      - docker stop $(docker ps -a -q) || true && docker rm $(docker rm -a -q) || true
+      - docker run --name=$BRANCH -i $REGISTRY npm run ci
+      - docker-compose up
+   
+  tags:
+      - shell_executor
+
+deploy_project:
+  stage: deploy
+  script:
+      - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+      - docker pull $REGISTRY
+      - docker stop $(docker ps -a -q) || true && docker rm $(docker rm -a -q) || true
+      - docker run --name=$BRANCH -i $REGISTRY npm run start-server
+      - docker-compose up
+
+  tags:
+      - shell_executor
+
+
+
+
+
+
