@@ -6,4 +6,4 @@ COPY app /usr/src/app
 COPY . /usr/src/app
 RUN npm install
 CMD [ "npm" , "start" ]
-CMD apt install docker.io
+
