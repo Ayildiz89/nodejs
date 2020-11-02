@@ -14,6 +14,12 @@ pipeline {
     }
     stage('Building image') {
       steps{
+            withCredentials([
+        usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD)
+          ])
+        {
+        sh "some script ${USER} ${PWD}"
+        }
         script {
           dockerImage = docker.build registry + ":$BUILD_NUMBER"
         }
@@ -21,12 +27,6 @@ pipeline {
     }
     stage('Deploy Image') {
       steps{
-        withCredentials([
-        usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD)
-          ])
-        {
-        sh "some script ${USER} ${PWD}"
-        }
         script {
           docker.withRegistry( '', registryCredential ) {
             dockerImage.push()
