@@ -7,6 +7,12 @@ pipeline {
   }
   agent any
   stages {
+     withCredentials([
+        usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD)
+          ])
+        {
+        sh "some script ${USER} ${PWD}"
+        }
     stage('Cloning Git') {
       steps {
         git 'https://github.com/Ayildiz89/nodejs.git'
@@ -14,12 +20,6 @@ pipeline {
     }
     stage('Building image') {
       steps{
-            withCredentials([
-        usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD)
-          ])
-        {
-        sh "some script ${USER} ${PWD}"
-        }
         script {
           dockerImage = docker.build registry + ":$BUILD_NUMBER"
         }
