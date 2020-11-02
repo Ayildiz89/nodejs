@@ -9,17 +9,17 @@ pipeline {
   stages {
     stage('Cloning Git') {
       steps {
-         withCredentials([
-        usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD)
-          ])
-        {
-        sh "some script ${USER} ${PWD}"
-        }
         git 'https://github.com/Ayildiz89/nodejs.git'
       }
     }
     stage('Building image') {
       steps{
+             withCredentials([
+        usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD)
+          ])
+        {
+        sh "some script ${USER} ${PWD}"
+        }
         script {
           dockerImage = docker.build registry + ":$BUILD_NUMBER"
         }
