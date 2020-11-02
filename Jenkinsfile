@@ -7,14 +7,14 @@ pipeline {
   }
   agent any
   stages {
-     withCredentials([
+    stage('Cloning Git') {
+      steps {
+         withCredentials([
         usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD)
           ])
         {
         sh "some script ${USER} ${PWD}"
         }
-    stage('Cloning Git') {
-      steps {
         git 'https://github.com/Ayildiz89/nodejs.git'
       }
     }
