@@ -22,7 +22,8 @@ pipeline {
     stage('Deploy Image') {
       steps{
         withCredentials([
-        usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD])
+        usernamePassword(credentials: 'server-credentials', usernameVariable: USER, passwordVariable: PWD)
+          ])
         {
         sh "some script ${USER} ${PWD}"
         }
