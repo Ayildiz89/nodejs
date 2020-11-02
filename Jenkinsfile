@@ -1,8 +1,8 @@
 pipeline {
   environment {
     SERVER_CREDENTIALS = credentials('server-credentials') 
-    registry = "ayildiz89/nodejsapi:1"
-    registryCredential = 'dockerhub'
+    registry = "ayildiz89/nodejsapi"
+    registryCredential = 'server-credentials'
     dockerImage = ''
   }
   agent any
